@@ -10,7 +10,7 @@ share_bp = Blueprint('shares', __name__)
 @share_bp.route('/requests', methods=['POST'])
 @jwt_required()
 def register():
-    consumer_id = get_jwt_identity()           # 获取当前JWT中保存的用户ID
+    consumer_id = int( get_jwt_identity() )          # 获取当前JWT中保存的用户ID
     data = request.get_json()  # 获取请求JSON数据
     dataset_id = data.get('datasetId') if data else None
     description = data.get('message') if data else None
@@ -32,7 +32,7 @@ def update():
 @share_bp.route('/sharing-with-others', methods=['GET'])
 @jwt_required()
 def list_my_sharing_route():
-    provider_id = get_jwt_identity()# 获取当前JWT中保存的用户ID
+    provider_id = int(get_jwt_identity())# 获取当前JWT中保存的用户ID
     # 调用控制器执行注册逻辑
     sharing_dataset = list_my_sharing(provider_id)
     sharing_list = [ {
@@ -47,7 +47,7 @@ def list_my_sharing_route():
 @share_bp.route('/shared-with-me', methods=['GET'])
 @jwt_required()
 def list_shared_with_me_route():
-    consumer_id = get_jwt_identity()# 获取当前JWT中保存的用户ID
+    consumer_id = int(get_jwt_identity())# 获取当前JWT中保存的用户ID
     # 调用控制器执行注册逻辑
     shared_dataset = list_shared_with_me(consumer_id)
     shared_list = [ {
