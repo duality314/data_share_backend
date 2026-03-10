@@ -22,7 +22,7 @@ def login():
     # 验证用户名密码
     user = authenticate_user(username, password)
     # 生成JWT令牌，有效期7天，载荷包含用户id（作为身份）和用户名
-    access_token = create_access_token(identity=user.id, additional_claims={"username": user.username}, expires_delta=False)
+    access_token = create_access_token(identity=str(user.id), additional_claims={"username": user.username}, expires_delta=False)
     # 返回令牌和用户信息
     return jsonify({
         "token": access_token,

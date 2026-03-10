@@ -14,7 +14,7 @@ dataset_bp = Blueprint('datasets', __name__)
 @dataset_bp.route('', methods=['POST'])
 @jwt_required()  # JWT保护，必须登录
 def upload_dataset():
-    current_user_id = get_jwt_identity()           # 获取当前JWT中保存的用户ID
+    current_user_id = int( get_jwt_identity() )          # 获取当前JWT中保存的用户ID
     # 从请求中获取表单数据和文件
     name = request.form.get('name')
     description = request.form.get('description')
@@ -41,7 +41,7 @@ def upload_dataset():
 @dataset_bp.route('/mine', methods=['GET'])
 @jwt_required()
 def my_datasets():
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     datasets = list_my_datasets(current_user_id)
     # 将结果转换为可序列化列表
     owned_list = [ {
@@ -101,7 +101,7 @@ def dataset_detail(dataset_id):
 @dataset_bp.route('/<int:dataset_id>/listing', methods=['PATCH'])
 @jwt_required()
 def set_listing(dataset_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     # 获取请求 JSON 中的新状态
     body = request.get_json()
     is_listed = body.get('isListed') if body else None
@@ -115,6 +115,6 @@ def set_listing(dataset_id):
 @dataset_bp.route('/<int:dataset_id>/download', methods=['GET'])
 @jwt_required()
 def download_file(dataset_id):
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     # 控制器直接返回 send_file 响应
     return download_dataset_file(dataset_id, current_user_id)
