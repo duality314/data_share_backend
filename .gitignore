@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+pip-wheel-metadata/
+build/
+dist/
+.eggs/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+
+# Environment variables / secrets
+.env
+instance/
+
+# Python testing and coverage
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Logs
+*.log
+
+# Database
+*.sqlite3
+
+# Cache
+.cache/
+
+# Project-specific: uploaded files directory
+data-share-backend/uploads/
