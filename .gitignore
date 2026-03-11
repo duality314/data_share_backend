@@ -45,4 +45,4 @@ htmlcov/
 .cache/
 
 # Project-specific: uploaded files directory
-data-share-backend/uploads/
+uploads/
