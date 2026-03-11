@@ -8,23 +8,38 @@ from models.dataset import Dataset
 def create_share(consumer_id: BigInteger, dataset_id: BigInteger, description: str):
     """注册新共享"""
     # 检查必填参数
+    if not dataset_id:
+        abort(400, description="datasetId required")
+
+    dataset = Dataset.query.filter_by(id=dataset_id).first()
+    if not dataset:
+        abort(404, description="dataset not found")
+    if dataset.owner_id == consumer_id:
+        abort(400, description="cannot request your own dataset")
 
     # 用户名是否已存在
     existing = Share.query.filter_by(consumer_id=consumer_id, dataset_id=dataset_id).first()
     if existing:
         abort(409, description="share already exists")
-    else:    
+    else:
         # 创建新的共享记录
-        new_share = Share(provider_id=Dataset.query.filter_by(id=dataset_id).first().owner_id, consumer_id=consumer_id, dataset_id=dataset_id, request_description=description)
+        new_share = Share(
+            provider_id=dataset.owner_id,
+            consumer_id=consumer_id,
+            dataset_id=dataset_id,
+            request_description=description or "",
+        )
         database.session.add(new_share)
     database.session.commit()
     return {"status": "success"}
 
-def update_share(share_id: int, is_shared: bool):
+def update_share(share_id: int, provider_id: int, is_shared: bool):
     """更新共享状态"""
     share = Share.query.get(share_id)
     if not share:
         abort(404, description="share not found")
+    if share.provider_id != provider_id:
+        abort(403, description="not allowed")
     share.is_shared = is_shared
     database.session.commit()
     return {"status": "success"}

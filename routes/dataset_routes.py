@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from apiflask import APIBlueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from controllers.dataset_controller import (
@@ -6,83 +6,62 @@ from controllers.dataset_controller import (
     get_dataset_detail, toggle_listing, download_dataset_file
 )
 from models.user import User
+from schemas.dataset_schema import (
+    DatasetDetailOutSchema,
+    DatasetListingPatchInSchema,
+    DatasetListingPatchOutSchema,
+    DatasetMarketOutSchema,
+    DatasetMarketQueryInSchema,
+    DatasetMineOutSchema,
+    DatasetOutSchema,
+    DatasetUploadInSchema,
+)
 
-dataset_bp = Blueprint('datasets', __name__)
+dataset_bp = APIBlueprint("datasets", __name__)
 
 # 上传登记数据集 
-@dataset_bp.route('/', methods=['POST'])
-@dataset_bp.route('', methods=['POST'])
+@dataset_bp.post("")
+@dataset_bp.post("/")
 @jwt_required()  # JWT保护，必须登录
-def upload_dataset():
+@dataset_bp.input(DatasetUploadInSchema, location="form_and_files")
+@dataset_bp.output(DatasetOutSchema, 200)
+def upload_dataset(data):
     current_user_id = int( get_jwt_identity() )          # 获取当前JWT中保存的用户ID
-    # 从请求中获取表单数据和文件
-    name = request.form.get('name')
-    description = request.form.get('description')
-    domain = request.form.get('domain')
-    data_type = request.form.get('dataType')
-    file = request.files.get('file')
     # 调用控制器处理上传逻辑
-    dataset = create_dataset(current_user_id, name, description, domain, data_type, file)
-    # 返回创建的数据集对象
-    return jsonify({ "dataset": {
-        "id": dataset.id,
-        "name": dataset.name,
-        "description": dataset.description,
-        "domain": dataset.domain,
-        "dataType": dataset.data_type,
-        "fileSize": dataset.file_size,
-        "isListed": dataset.is_listed,
-        "downloads": dataset.downloads,
-        "ownerId": dataset.owner_id,
-        "createdAt": dataset.id    # 这里简化用ID代替创建时间
-    }}), 200
+    dataset = create_dataset(
+        current_user_id,
+        data["name"],
+        data.get("description"),
+        data.get("domain"),
+        data.get("dataType"),
+        data["file"],
+    )
+    return {"dataset": dataset}
 
 # 获取我的数据集列表
-@dataset_bp.route('/mine', methods=['GET'])
+@dataset_bp.get("/mine")
 @jwt_required()
+@dataset_bp.output(DatasetMineOutSchema, 200)
 def my_datasets():
     current_user_id = int(get_jwt_identity())
     datasets = list_my_datasets(current_user_id)
-    # 将结果转换为可序列化列表
-    owned_list = [ {
-        "id": ds.id,
-        "name": ds.name,
-        "description": ds.description,
-        "domain": ds.domain,
-        "dataType": ds.data_type,
-        "fileSize": ds.file_size,
-        "isListed": ds.is_listed,
-        "downloads": ds.downloads,
-        "ownerId": ds.owner_id,
-        "createdAt": ds.id  # 同上简化处理
-    } for ds in datasets ]
-    return jsonify({ "owned": owned_list }), 200
+    return {"owned": datasets}
 
 # 数据市场列表 (对应 Express GET /api/datasets/market)
-@dataset_bp.route('/market', methods=['GET'])
-def market_list():
-    domain = request.args.get('domain')
-    sort = request.args.get('sort')
-    datasets = list_market_datasets(domain, sort)
-    market_list = [ {
-        "id": ds.id,
-        "name": ds.name,
-        "description": ds.description,
-        "domain": ds.domain,
-        "dataType": ds.data_type,
-        "fileSize": ds.file_size,
-        "isListed": ds.is_listed,
-        "downloads": ds.downloads,
-        "ownerId": ds.owner_id,
-        "createdAt": ds.id
-    } for ds in datasets ]
-    return jsonify({ "list": market_list }), 200
+@dataset_bp.get("/market")
+@dataset_bp.input(DatasetMarketQueryInSchema, location="query")
+@dataset_bp.output(DatasetMarketOutSchema, 200)
+def market_list(query):
+    datasets = list_market_datasets(query.get("domain"), query.get("sort"))
+    return {"list": datasets}
 
 # 数据集详情 + 预览 (对应 Express GET /api/datasets/:id)
-@dataset_bp.route('/<int:dataset_id>', methods=['GET'])
+@dataset_bp.get("/<int:dataset_id>")
+@dataset_bp.output(DatasetDetailOutSchema, 200)
 def dataset_detail(dataset_id):
     dataset, preview_lines = get_dataset_detail(dataset_id)
-    return jsonify({
+    owner = User.query.get(dataset.owner_id)
+    return {
         "dataset": {
             "id": dataset.id,
             "name": dataset.name,
@@ -92,27 +71,26 @@ def dataset_detail(dataset_id):
             "fileSize": dataset.file_size,
             "downloads": dataset.downloads,
             "isListed": dataset.is_listed,
-            "ownerName": User.query.get(dataset.owner_id).username if dataset.owner_id else "unknown",
+            "ownerName": owner.username if owner else "unknown",
         },
         "previewLines": preview_lines
-    }), 200
+    }
 
 # 切换上架状态 (对应 Express PATCH /api/datasets/:id/listing)
-@dataset_bp.route('/<int:dataset_id>/listing', methods=['PATCH'])
+@dataset_bp.patch("/<int:dataset_id>/listing")
 @jwt_required()
-def set_listing(dataset_id):
+@dataset_bp.input(DatasetListingPatchInSchema)
+@dataset_bp.output(DatasetListingPatchOutSchema, 200)
+def set_listing(data, dataset_id):
     current_user_id = int(get_jwt_identity())
-    # 获取请求 JSON 中的新状态
-    body = request.get_json()
-    is_listed = body.get('isListed') if body else None
-    updated = toggle_listing(dataset_id, current_user_id, is_listed)
-    return jsonify({ "dataset": {
+    updated = toggle_listing(dataset_id, current_user_id, data["isListed"])
+    return {"dataset": {
         "id": updated.id,
         "isListed": updated.is_listed
-    }}), 200
+    }}
 
 # 数据下载 (对应 Express GET /api/datasets/:id/download)
-@dataset_bp.route('/<int:dataset_id>/download', methods=['GET'])
+@dataset_bp.get("/<int:dataset_id>/download")
 @jwt_required()
 def download_file(dataset_id):
     current_user_id = int(get_jwt_identity())
