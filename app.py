@@ -1,5 +1,6 @@
 # app.py
-from flask import Flask, app, jsonify
+from apiflask import APIFlask
+from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
 
 from config import Config
@@ -7,8 +8,21 @@ from db import database, jwt
 
 
 def create_app():
-    app = Flask(__name__)
+    app = APIFlask(
+        __name__,
+        title="Data Share Backend API",
+        version="1.0.0",
+        docs_path="/docs",
+        openapi_blueprint_url_prefix="/",
+    )
     app.config.from_object(Config)
+    app.config["OPENAPI_VERSION"] = "3.0.3"
+    app.config["JSON_SORT_KEYS"] = False
+
+    app.security_schemes = {
+        "BearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
+    }
+
     database.init_app(app)  # 初始化数据库
     jwt.init_app(app)       # 初始化 JWT 管理
     CORS(app, origins=[Config.CORS_ORIGIN], supports_credentials=True)  # 配置跨域
@@ -21,7 +35,16 @@ def create_app():
     # 健康检查路由
     @app.route("/health", methods=["GET"])
     def health_check():
-        return jsonify({ "ok": True })
+        return {"ok": True}
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(err):
+        status = err.code or 500
+        return {
+            "code": status,
+            "message": err.name,
+            "details": err.description,
+        }, status
 
     return app
 
