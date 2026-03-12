@@ -11,7 +11,7 @@ share_bp = APIBlueprint("shares", __name__)
 # 创建共享
 @share_bp.post("")
 @jwt_required()
-@share_bp.input(ShareCreateInSchema)
+@share_bp.input(ShareCreateInSchema, arg_name="data")
 @share_bp.output(ShareCreateOutSchema, 200)
 def create(data):
     consumer_id = int( get_jwt_identity() )          # 获取当前JWT中保存的用户ID
@@ -22,7 +22,7 @@ def create(data):
 # 更新共享
 @share_bp.patch('/<int:share_id>')
 @jwt_required()
-@share_bp.input(SharePatchInSchema)
+@share_bp.input(SharePatchInSchema, arg_name="data")
 @share_bp.output(ShareCreateOutSchema, 200)
 def update(data, share_id):
     provider_id = int(get_jwt_identity())
