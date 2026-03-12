@@ -17,7 +17,7 @@ def register(data):
     return user_info
 
 @auth_bp.post("/login")
-@auth_bp.input(AuthLoginInSchema)
+@auth_bp.input(AuthLoginInSchema, arg_name = "data")
 @auth_bp.output(AuthLoginOutSchema, 200)
 def login(data):
     username = data["username"]

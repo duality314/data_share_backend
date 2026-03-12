@@ -23,7 +23,7 @@ dataset_bp = APIBlueprint("datasets", __name__)
 @dataset_bp.post("")
 @dataset_bp.post("/")
 @jwt_required()  # JWT保护，必须登录
-@dataset_bp.input(DatasetUploadInSchema, location="form_and_files")
+@dataset_bp.input(DatasetUploadInSchema, location="form_and_files",arg_name="data")  # 从表单和文件中解析输入数据
 @dataset_bp.output(DatasetOutSchema, 200)
 def upload_dataset(data):
     current_user_id = int( get_jwt_identity() )          # 获取当前JWT中保存的用户ID
@@ -49,7 +49,7 @@ def my_datasets():
 
 # 数据市场列表 (对应 Express GET /api/datasets/market)
 @dataset_bp.get("/market")
-@dataset_bp.input(DatasetMarketQueryInSchema, location="query")
+@dataset_bp.input(DatasetMarketQueryInSchema, location="query", arg_name="query")
 @dataset_bp.output(DatasetMarketOutSchema, 200)
 def market_list(query):
     datasets = list_market_datasets(query.get("domain"), query.get("sort"))
@@ -79,7 +79,7 @@ def dataset_detail(dataset_id):
 # 切换上架状态 (对应 Express PATCH /api/datasets/:id/listing)
 @dataset_bp.patch("/<int:dataset_id>/listing")
 @jwt_required()
-@dataset_bp.input(DatasetListingPatchInSchema)
+@dataset_bp.input(DatasetListingPatchInSchema, arg_name="data")
 @dataset_bp.output(DatasetListingPatchOutSchema, 200)
 def set_listing(data, dataset_id):
     current_user_id = int(get_jwt_identity())
