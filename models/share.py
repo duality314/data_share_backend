@@ -9,7 +9,7 @@ class Share(database.Model):
     consumer_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
     dataset_id = Column(BigInteger, ForeignKey('datasets.id'), nullable=False)
     request_description = Column(Text, nullable=False, default="无")
-    is_shared = Column(Boolean, nullable=False, default=False)        # 是否上架公开
+    # is_shared = Column(Boolean, nullable=False, default=False)        # 是否上架公开
     # 状态：pending / approved / rejected
     status = Column(String(20), nullable=False, default='pending')
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -27,7 +27,7 @@ def create(data):
 def update(data, share_id):
     provider_id = int(get_jwt_identity())
     # 调用控制器执行注册逻辑
-    status = update_share(share_id, provider_id, data["isShared"])
+    status = update_share(share_id, provider_id, data["isApproved"])
     return status
 
 @share_bp.get('/sharing-with-others')
@@ -42,7 +42,7 @@ def list_my_sharing_route():
         "consumerName": User.query.get(sd.consumer_id).username if sd.consumer_id else "unknown",
         "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
         "request_description": sd.request_description,
-        "isShared": sd.is_shared,
+        "status": sd.status,
     } for sd in sharing_dataset ]
     return {"sharing": sharing_list}
 
@@ -73,7 +73,7 @@ def list_my_requests_route():
         "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
         "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
         "request_description": sd.request_description,
-        "isShared": sd.is_shared,
+        "status": sd.status,
         "datasetId": sd.dataset_id
     } for sd in requested]
     return {"requests": requests_list}

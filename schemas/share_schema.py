@@ -8,8 +8,7 @@ class ShareCreateInSchema(Schema):
 
 
 class SharePatchInSchema(Schema):
-    isShared = Boolean(required=True)
-
+    isApproved = Boolean(required=True)
 
 class ShareCreateOutSchema(Schema):
     status = String(required=True)
