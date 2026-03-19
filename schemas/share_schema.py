@@ -28,3 +28,4 @@ class ShareItemSchema(Schema):
 class ShareListOutSchema(Schema):
     sharing = List(Nested(ShareItemSchema), load_default=[])
     shared = List(Nested(ShareItemSchema), load_default=[])
+    requests = List(Nested(ShareItemSchema), load_default=[])
