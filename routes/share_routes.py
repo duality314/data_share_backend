@@ -1,7 +1,7 @@
 from apiflask import APIBlueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from controllers.share_controller import create_share, list_my_sharing, list_shared_with_me, update_share
+from controllers.share_controller import create_share, list_my_sharing, list_shared_with_me, update_share, list_my_requests
 from models.user import User
 from models.dataset import  Dataset
 from schemas.share_schema import ShareCreateInSchema, ShareCreateOutSchema, ShareListOutSchema, SharePatchInSchema
@@ -60,3 +60,20 @@ def list_shared_with_me_route():
         "datasetId": sd.dataset_id
     } for sd in shared_dataset ]
     return {"shared": shared_list}
+
+
+@share_bp.get('/requests-by-me')
+@jwt_required()
+@share_bp.output(ShareListOutSchema, 200)
+def list_my_requests_route():
+    consumer_id = int(get_jwt_identity())
+    requested = list_my_requests(consumer_id)
+    requests_list = [{
+        "id": sd.id,
+        "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
+        "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
+        "request_description": sd.request_description,
+        "isShared": sd.is_shared,
+        "datasetId": sd.dataset_id
+    } for sd in requested]
+    return {"requests": requests_list}
