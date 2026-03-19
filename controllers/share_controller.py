@@ -41,7 +41,7 @@ def create_share(consumer_id: BigInteger, dataset_id: BigInteger, description: s
         abort(409, description="could not create share (conflict)")
     return {"status": "success", "share_id": new_share.id}
 
-def update_share(share_id: int, provider_id: int, is_shared: bool):
+def update_share(share_id: int, provider_id: int, isApproved: bool):
     """批准或拒绝共享请求：批准时写入 DatasetPermission，拒绝时仅更新状态并保留记录用于审计"""
     share = Share.query.get(share_id)
     if not share:
@@ -52,11 +52,10 @@ def update_share(share_id: int, provider_id: int, is_shared: bool):
     if share.status != 'pending':
         abort(400, description="share request already processed")
 
-    if is_shared:
+    if isApproved:
         # 批准：更新状态并创建运行时权限
         share.status = 'approved'
         share.responded_at = func.now()
-        share.is_shared = True
         # 在同一事务内插入 DatasetPermission，若已存在则忽略
         existing_perm = DatasetPermission.query.filter_by(dataset_id=share.dataset_id, grantee_id=share.consumer_id).first()
         if not existing_perm:
