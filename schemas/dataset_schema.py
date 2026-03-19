@@ -3,14 +3,14 @@ from apiflask.fields import Boolean, Integer, List, Nested, String, File, Functi
 
 
 class DatasetItemSchema(Schema):
-    id = Integer(required=True)
+    id = Integer(required=True, dump_only=True)
     name = String(required=True)
     description = String(required=True)
     domain = String(required=True)
     dataType = String(attribute="data_type", required=True)
     fileSize = Integer(attribute="file_size", required=True)
     isListed = Boolean(attribute="is_listed", required=True)
-    downloads = Integer(required=True)
+    downloads = Integer(required=True, dump_only=True)
     ownerId = Integer(attribute="owner_id", required=True)
     createdAt = Function(lambda obj: getattr(obj, "id", None), required=True)
 
