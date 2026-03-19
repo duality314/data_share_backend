@@ -9,7 +9,7 @@ from schemas.share_schema import ShareCreateInSchema, ShareCreateOutSchema, Shar
 share_bp = APIBlueprint("shares", __name__)
 
 # 创建共享
-@share_bp.post("")
+@share_bp.post("/requests")
 @jwt_required()
 @share_bp.input(ShareCreateInSchema, arg_name="data")
 @share_bp.output(ShareCreateOutSchema, 200)
@@ -19,7 +19,7 @@ def create(data):
     status = create_share(consumer_id, data["datasetId"], data.get("message"))
     return status
 
-# 更新共享
+# 批准是否共享
 @share_bp.patch('/<int:share_id>')
 @jwt_required()
 @share_bp.input(SharePatchInSchema, arg_name="data")
