@@ -20,7 +20,7 @@ class ShareItemSchema(Schema):
     providerName = String(load_default="")
     datasetName = String(required=True)
     request_description = String(load_default="")
-    isShared = Boolean(load_default=False)
+    status = String(required=True)
     datasetId = Integer(load_default=None, allow_none=True)
 
 
