@@ -1,5 +1,6 @@
 from apiflask import Schema
-from apiflask.fields import Boolean, Integer, List, Nested, String, File, Function
+from apiflask.fields import Boolean, Integer, List, Nested, String, Function, File
+from marshmallow import ValidationError, validates_schema
 
 
 class DatasetItemSchema(Schema):
@@ -27,15 +28,17 @@ class DatasetMarketOutSchema(Schema):
     list = List(Nested(DatasetItemSchema), required=True)
 
 
-class DatasetUploadFormInSchema(Schema):
-    name = String(required=True)
-    description = String(load_default="")
-    domain = String(load_default="general")
-    dataType = String(load_default="file")
+# class DatasetUploadFormInSchema(Schema):
+#     name = String(required=True)
+#     description = String(load_default="")
+#     domain = String(load_default="general")
+#     dataType = String(load_default="file")
+#     storageType = String(load_default="local")
 
 
-class DatasetUploadFileInSchema(Schema):
-    file = File(required=True)
+# class DatasetUploadFileInSchema(Schema):
+#     file = File(load_default=None)
+#     s3Url = String(load_default=None, allow_none=True)
 
 
 class DatasetUploadInSchema(Schema):
@@ -43,7 +46,19 @@ class DatasetUploadInSchema(Schema):
     description = String(load_default="")
     domain = String(load_default="general")
     dataType = String(load_default="file")
-    file = File(required=True)
+    storage_type = String(load_default="local")
+    file = File(load_default=None)
+    s3Url = String(load_default=None, allow_none=True)
+
+    @validates_schema
+    def validate_upload_source(self, data, **kwargs):
+        file = data.get("file")
+        s3_url = data.get("s3Url")
+        
+        if not file and not s3_url:
+            raise ValidationError("Either 'file' or 's3Url' is required.")
+        if file and s3_url:
+            raise ValidationError("Cannot provide both 'file' and 's3Url'.")
 
 
 class DatasetMarketQueryInSchema(Schema):
@@ -79,3 +94,8 @@ class DatasetListingPatchDatasetSchema(Schema):
 
 class DatasetListingPatchOutSchema(Schema):
     dataset = Nested(DatasetListingPatchDatasetSchema, required=True)
+
+
+class DatasetDownloadUrlOutSchema(Schema):
+    downloadUrl = String(required=True)
+    source = String(required=True)

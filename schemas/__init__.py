@@ -9,8 +9,6 @@ from .dataset_schema import (
     DatasetMineOutSchema,
     DatasetOutSchema,
     DatasetUploadInSchema,
-    DatasetUploadFileInSchema,
-    DatasetUploadFormInSchema,
 )
 from .share_schema import (
     ShareCreateInSchema,
@@ -34,8 +32,6 @@ __all__ = [
     "DatasetMineOutSchema",
     "DatasetOutSchema",
     "DatasetUploadInSchema",
-    "DatasetUploadFileInSchema",
-    "DatasetUploadFormInSchema",
     "ShareCreateInSchema",
     "ShareCreateOutSchema",
     "ShareItemSchema",
