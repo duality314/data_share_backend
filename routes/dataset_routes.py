@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from controllers.dataset_controller import (
     create_dataset, list_my_datasets, list_market_datasets,
-    get_dataset_detail, toggle_listing, download_dataset_file
+    get_dataset_detail, toggle_listing, download_dataset_file, get_dataset_download_url
 )
 from models.user import User
 from schemas.dataset_schema import (
@@ -13,6 +13,7 @@ from schemas.dataset_schema import (
     DatasetMarketOutSchema,
     DatasetMarketQueryInSchema,
     DatasetMineOutSchema,
+    DatasetDownloadUrlOutSchema,
     DatasetOutSchema,
     DatasetUploadInSchema,
 )
@@ -33,8 +34,10 @@ def upload_dataset(data):
         data["name"],
         data.get("description"),
         data.get("domain"),
+        data.get("storage_type"),
         data.get("dataType"),
-        data["file"],
+        data.get("s3Url"),
+        data.get("file"),
     )
     return {"dataset": dataset}
 
@@ -96,3 +99,11 @@ def download_file(dataset_id):
     current_user_id = int(get_jwt_identity())
     # 控制器直接返回 send_file 响应
     return download_dataset_file(dataset_id, current_user_id)
+
+
+@dataset_bp.get("/<int:dataset_id>/download-url")
+@jwt_required()
+@dataset_bp.output(DatasetDownloadUrlOutSchema, 200)
+def download_url(dataset_id):
+    current_user_id = int(get_jwt_identity())
+    return get_dataset_download_url(dataset_id, current_user_id)

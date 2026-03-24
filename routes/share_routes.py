@@ -57,6 +57,7 @@ def list_shared_with_me_route():
         "id": sd.id,
         "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
         "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
+        "storage_type": Dataset.query.get(sd.dataset_id).storage_type if sd.dataset_id else "unknown",
         "datasetId": sd.dataset_id
     } for sd in shared_dataset ]
     return {"shared": shared_list}

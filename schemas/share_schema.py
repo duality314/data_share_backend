@@ -22,6 +22,7 @@ class ShareItemSchema(Schema):
     request_description = String(load_default="")
     status = String(required=True)
     datasetId = Integer(load_default=None, allow_none=True)
+    storage_type = String(load_default="unknown")
 
 
 class ShareListOutSchema(Schema):
