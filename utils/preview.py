@@ -39,19 +39,4 @@ def can_preview_text(data_type: str):
 
 def read_dataset_preview_lines(dataset, max_lines: int = 10):
     """根据存储类型读取预览内容，异常统一返回空列表"""
-    if not can_preview_text(getattr(dataset, "data_type", None)):
-        return []
-
-    storage_type = dataset.storage_type
-    #对于s3先返回空预览，后续可以考虑增加s3预览功能（需要额外处理URL安全和性能问题）
-    if storage_type == "s3":
-        return []
-        # s3_url = getattr(dataset, "s3_url", None)
-        # if not s3_url:
-        #     return []
-        # return read_first_lines_from_url(s3_url, max_lines=max_lines)
-
-    file_path = getattr(dataset, "file_path", None)
-    if not file_path:
-        return []
-    return read_first_lines(file_path, max_lines=max_lines)
+    return []
