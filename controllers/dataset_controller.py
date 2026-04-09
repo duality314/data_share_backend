@@ -9,24 +9,6 @@ from models.download_log import DownloadLog
 from utils.preview import read_dataset_preview_lines
 
 
-def _validate_download_url(download_url: str):
-    """校验上传的下载URL，避免无效URL进入系统"""
-    if not download_url:
-        abort(400, description="s3Url required")
-
-    max_len = int(current_app.config.get("DOWNLOAD_URL_MAX_LEN", 2048))
-    if len(download_url) > max_len:
-        abort(400, description="s3Url too long")
-
-    parsed = urlparse(download_url)
-    if parsed.scheme not in ("http", "https") or not parsed.netloc:
-        abort(400, description="invalid s3Url")
-
-    allowed_hosts = [h.strip().lower() for h in (current_app.config.get("S3_ALLOWED_HOSTS", "") or "").split(",") if h.strip()]
-    if allowed_hosts and parsed.netloc.lower() not in allowed_hosts:
-        abort(400, description="s3Url host not allowed")
-
-
 def _authorize_and_count_download(dataset_id: int, user_id: int):
     """统一下载授权、下载日志与计数逻辑"""
     dataset = Dataset.query.get(dataset_id)
@@ -43,31 +25,24 @@ def _authorize_and_count_download(dataset_id: int, user_id: int):
     return dataset
 
 
-def create_dataset(owner_id: int, name: str, description: str, domain: str, storage_type: str, data_type: str, s3_url: str, file_storage):
-    """处理数据集登记：上传输入为可下载URL"""
-    _validate_download_url(s3_url)
+def create_dataset(owner_id: int, name: str, description: str, domain: str, data_type: str, object_key: str = None, file_size: int = 0):
+    """处理数据集登记：以 `object_key` 登记对象键（前端通常仅传 object_key）。
+    保留 `s3_url` 参数以向后兼容，但仅做校验，不作为 object_key 的回退来源。
+    """
     if not name:
         abort(400, description="name required")
-    if storage_type == "local":
-        # 确保上传目录存在
-        upload_dir = os.getenv("UPLOAD_DIR", "uploads")
-        os.makedirs(upload_dir, exist_ok=True)
-        # 保存文件到上传目录
-        filename = secure_filename(file_storage.filename)
-        file_path = os.path.join(upload_dir, f"{int(__import__('time').time())}_{filename}")
-        file_storage.save(file_path)
-        file_size = os.path.getsize(file_path)
-    else:
-        file_size = 0
-    # 创建数据集记录
+
+    # 要求前端提供 object_key
+    if not object_key:
+        abort(400, description="objectKey required")
+
+    # 创建数据集记录（仅保存 object_key），不再保存预签名 s3_url 或 storage_type
     dataset = Dataset(
         name=name,
         description=description or "",
         domain=domain or "general",
         data_type=data_type or "file",
-        storage_type=storage_type,
-        file_path=file_path if storage_type == "local" else None,
-        s3_url=s3_url if storage_type == "s3" else None,
+        object_key=object_key,
         file_size=file_size,
         is_listed=False,
         downloads=0,

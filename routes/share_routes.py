@@ -30,6 +30,7 @@ def update(data, share_id):
     status = update_share(share_id, provider_id, data["isApproved"])
     return status
 
+# 列出我共享给别人的数据集(别人对我的共享请求)
 @share_bp.get('/sharing-with-others')
 @jwt_required()
 @share_bp.output(ShareListOutSchema, 200)
@@ -42,10 +43,12 @@ def list_my_sharing_route():
         "consumerName": User.query.get(sd.consumer_id).username if sd.consumer_id else "unknown",
         "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
         "request_description": sd.request_description,
+        "objectKey": Dataset.query.get(sd.dataset_id).object_key if sd.dataset_id else "unknown",
         "status": sd.status,
     } for sd in sharing_dataset ]
     return {"sharing": sharing_list}
 
+# 列出共享给我的数据集
 @share_bp.get('/shared-with-me')
 @jwt_required()
 @share_bp.output(ShareListOutSchema, 200)
@@ -57,12 +60,11 @@ def list_shared_with_me_route():
         "id": sd.id,
         "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
         "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
-        "storage_type": Dataset.query.get(sd.dataset_id).storage_type if sd.dataset_id else "unknown",
         "datasetId": sd.dataset_id
     } for sd in shared_dataset ]
     return {"shared": shared_list}
 
-
+# 列出我请求共享的数据集
 @share_bp.get('/requests-by-me')
 @jwt_required()
 @share_bp.output(ShareListOutSchema, 200)

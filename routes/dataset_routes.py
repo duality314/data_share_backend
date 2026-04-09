@@ -34,10 +34,10 @@ def upload_dataset(data):
         data["name"],
         data.get("description"),
         data.get("domain"),
-        data.get("storage_type"),
         data.get("dataType"),
-        data.get("s3Url"),
-        data.get("file"),
+        data.get("objectKey"),
+        data.get("fileSize")
+        
     )
     return {"dataset": dataset}
 
