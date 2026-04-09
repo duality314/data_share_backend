@@ -46,19 +46,16 @@ class DatasetUploadInSchema(Schema):
     description = String(load_default="")
     domain = String(load_default="general")
     dataType = String(load_default="file")
-    storage_type = String(load_default="local")
-    file = File(load_default=None)
-    s3Url = String(load_default=None, allow_none=True)
+    fileSize = Integer(load_default=0)
+    # 新接口：客户端应提供对象键 objectKey（S3 object key）
+    objectKey = String(required=True)
 
     @validates_schema
     def validate_upload_source(self, data, **kwargs):
-        file = data.get("file")
-        s3_url = data.get("s3Url")
-        
-        if not file and not s3_url:
-            raise ValidationError("Either 'file' or 's3Url' is required.")
-        if file and s3_url:
-            raise ValidationError("Cannot provide both 'file' and 's3Url'.")
+        # 强制要求 objectKey（短期仅 S3 支持）
+        object_key = data.get("objectKey")
+        if not object_key:
+            raise ValidationError("objectKey is required for S3 uploads.")
 
 
 class DatasetMarketQueryInSchema(Schema):
