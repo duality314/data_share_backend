@@ -1,34 +1,48 @@
 import os
-from flask import abort, send_file
+from flask import abort, send_file, redirect, url_for, current_app
 from werkzeug.utils import secure_filename
+from urllib.parse import urlparse
 
 from db import database
 from models.dataset import Dataset
 from models.download_log import DownloadLog
-from utils.preview import read_first_lines
+from utils.preview import read_dataset_preview_lines
 
-def create_dataset(owner_id: int, name: str, description: str, domain: str, data_type: str, file_storage):
-    """处理数据集上传登记"""
-    # 检查必填
-    if not file_storage:
-        abort(400, description="file required")
+
+def _authorize_and_count_download(dataset_id: int, user_id: int):
+    """统一下载授权、下载日志与计数逻辑"""
+    dataset = Dataset.query.get(dataset_id)
+    if not dataset:
+        abort(404, description="not found")
+
+    if not dataset.is_listed and dataset.owner_id != user_id:
+        abort(403, description="not allowed")
+
+    log = DownloadLog(user_id=user_id, dataset_id=dataset.id)
+    database.session.add(log)
+    dataset.downloads += 1
+    database.session.commit()
+    return dataset
+
+
+def create_dataset(owner_id: int, name: str, description: str, domain: str, data_type: str, object_key: str = None, file_size: int = 0):
+    """处理数据集登记：以 `object_key` 登记对象键（前端通常仅传 object_key）。
+    保留 `s3_url` 参数以向后兼容，但仅做校验，不作为 object_key 的回退来源。
+    """
     if not name:
         abort(400, description="name required")
-    # 确保上传目录存在
-    upload_dir = os.getenv("UPLOAD_DIR", "uploads")
-    os.makedirs(upload_dir, exist_ok=True)
-    # 保存文件到上传目录
-    filename = secure_filename(file_storage.filename)
-    file_path = os.path.join(upload_dir, f"{int(__import__('time').time())}_{filename}")
-    file_storage.save(file_path)
-    file_size = os.path.getsize(file_path)
-    # 创建数据集记录
+
+    # 要求前端提供 object_key
+    if not object_key:
+        abort(400, description="objectKey required")
+
+    # 创建数据集记录（仅保存 object_key），不再保存预签名 s3_url 或 storage_type
     dataset = Dataset(
         name=name,
         description=description or "",
         domain=domain or "general",
         data_type=data_type or "file",
-        file_path=file_path,
+        object_key=object_key,
         file_size=file_size,
         is_listed=False,
         downloads=0,
@@ -67,8 +81,8 @@ def get_dataset_detail(dataset_id: int):
     # 若数据集未上架，则禁止访问（即使是拥有者也不提供详情，和原逻辑保持一致）
     if not dataset.is_listed:
         abort(403, description="not listed")
-    # 读取文件前几行内容作为预览
-    preview_lines = read_first_lines(dataset.file_path, max_lines=10)
+    # 仅读取文本/CSV预览，失败返回空数组
+    preview_lines = read_dataset_preview_lines(dataset, max_lines=10)
     return dataset, preview_lines
 
 def toggle_listing(dataset_id: int, owner_id: int, is_listed: bool):
@@ -83,18 +97,37 @@ def toggle_listing(dataset_id: int, owner_id: int, is_listed: bool):
     return dataset
 
 def download_dataset_file(dataset_id: int, user_id: int):
-    """处理文件下载，记录日志并返回文件响应"""
-    dataset = Dataset.query.get(dataset_id)
-    if not dataset:
-        abort(404, description="not found")
-    # 未上架的数据只能被拥有者下载，其他人无权限
-    if not dataset.is_listed and dataset.owner_id != user_id:
-        abort(403, description="not allowed")
-    # 记录下载日志，增加下载计数
-    log = DownloadLog(user_id=user_id, dataset_id=dataset.id)
-    database.session.add(log)
-    dataset.downloads += 1
-    database.session.commit()
-    # 发送文件
+    """处理下载：local返回文件流，s3重定向到已登记URL"""
+    dataset = _authorize_and_count_download(dataset_id, user_id)
+
+    storage_type = (dataset.storage_type or "local").lower()
+    if storage_type == "s3":
+        if not dataset.s3_url:
+            abort(404, description="download url missing")
+        # return redirect(dataset.s3_url, code=302)
+        #返回url的json
+            return {"downloadUrl": dataset.s3_url}
+
+    if not dataset.file_path:
+        abort(404, description="file missing")
+    if not os.path.exists(dataset.file_path):
+        abort(404, description="file not found")
+
     filename = os.path.basename(dataset.file_path)
     return send_file(dataset.file_path, as_attachment=True, download_name=filename)
+
+
+def get_dataset_download_url(dataset_id: int, user_id: int):
+    """返回下载URL，复用下载授权与计数逻辑"""
+    dataset = _authorize_and_count_download(dataset_id, user_id)
+    storage_type = (dataset.storage_type or "local").lower()
+
+    if storage_type == "s3":
+        if not dataset.s3_url:
+            abort(404, description="download url missing")
+        return {"downloadUrl": dataset.s3_url, "source": "s3"}
+
+    return {
+        "downloadUrl": url_for("datasets.download_file", dataset_id=dataset.id, _external=False),
+        "source": "local",
+    }
