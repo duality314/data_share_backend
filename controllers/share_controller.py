@@ -8,7 +8,7 @@ from models.share import Share
 from models.dataset import Dataset
 from models.dataset_permission import DatasetPermission
 
-def create_share(consumer_id: BigInteger, dataset_id: BigInteger, description: str):
+def create_share(consumer_id: BigInteger, dataset_id: BigInteger, description: str, consumer_public_key: str = None):
     """注册新共享"""
     # 检查必填参数
     if not dataset_id:
@@ -25,12 +25,13 @@ def create_share(consumer_id: BigInteger, dataset_id: BigInteger, description: s
     if existing_pending:
         abort(409, description="pending share already exists")
 
-    # 创建新的共享记录（status 默认为 'pending'）
+    # 创建新的共享记录（status 默认为 'pending'），并保存请求方公钥（如有）
     new_share = Share(
         provider_id=dataset.owner_id,
         consumer_id=consumer_id,
         dataset_id=dataset_id,
         request_description=description or "",
+        consumer_public_key=consumer_public_key,
     )
     database.session.add(new_share)
     try:

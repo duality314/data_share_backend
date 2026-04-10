@@ -16,7 +16,7 @@ share_bp = APIBlueprint("shares", __name__)
 def create(data):
     consumer_id = int( get_jwt_identity() )          # 获取当前JWT中保存的用户ID
     # 调用控制器执行注册逻辑
-    status = create_share(consumer_id, data["datasetId"], data.get("message"))
+    status = create_share(consumer_id, data["datasetId"], data.get("message"), data.get("publicKey"))
     return status
 
 # 批准是否共享
@@ -44,6 +44,7 @@ def list_my_sharing_route():
         "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
         "request_description": sd.request_description,
         "objectKey": Dataset.query.get(sd.dataset_id).object_key if sd.dataset_id else "unknown",
+        "consumerPublicKey": sd.consumer_public_key,
         "status": sd.status,
     } for sd in sharing_dataset ]
     return {"sharing": sharing_list}

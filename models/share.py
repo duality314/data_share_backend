@@ -9,6 +9,8 @@ class Share(database.Model):
     consumer_id = Column(BigInteger, ForeignKey('users.id'), nullable=False)
     dataset_id = Column(BigInteger, ForeignKey('datasets.id'), nullable=False)
     request_description = Column(Text, nullable=False, default="无")
+    # 存储请求方（consumer）用于与提供方通信的公钥
+    consumer_public_key = Column(Text, nullable=False)
     # 状态：pending / approved / rejected
     status = Column(String(20), nullable=False, default='pending')
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
