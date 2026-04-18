@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: "1"
+      MYSQL_DATABASE: "data_share_test"
+    ports:
+      - "3306:3306"
+    volumes:
+      # 使用命名卷，不再指向具体文件夹
+      - mysql_prod_data:/var/lib/mysql
+    restart: unless-stopped
+volumes:
+  mysql_prod_data:
+    driver: local
