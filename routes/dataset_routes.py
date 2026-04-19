@@ -21,8 +21,8 @@ from schemas.dataset_schema import (
 dataset_bp = APIBlueprint("datasets", __name__)
 
 # 上传登记数据集 
-@dataset_bp.post("")
-@dataset_bp.post("/")
+# @dataset_bp.post("")
+@dataset_bp.post("/upload")
 @jwt_required()  # JWT保护，必须登录
 @dataset_bp.input(DatasetUploadInSchema, location="form_and_files",arg_name="data")  # 从表单和文件中解析输入数据
 @dataset_bp.output(DatasetOutSchema, 200)

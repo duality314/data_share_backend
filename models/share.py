@@ -15,7 +15,7 @@ class Share(database.Model):
     status = Column(String(20), nullable=False, default='pending')
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     responded_at = Column(DateTime(timezone=True), nullable=True)
-
+    # 加速查询
     __table_args__ = (
         Index('ix_share_consumer_status', 'consumer_id', 'status'),
         Index('ix_share_provider_status', 'provider_id', 'status'),

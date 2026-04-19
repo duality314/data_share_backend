@@ -28,19 +28,6 @@ class DatasetMarketOutSchema(Schema):
     list = List(Nested(DatasetItemSchema), required=True)
 
 
-# class DatasetUploadFormInSchema(Schema):
-#     name = String(required=True)
-#     description = String(load_default="")
-#     domain = String(load_default="general")
-#     dataType = String(load_default="file")
-#     storageType = String(load_default="local")
-
-
-# class DatasetUploadFileInSchema(Schema):
-#     file = File(load_default=None)
-#     s3Url = String(load_default=None, allow_none=True)
-
-
 class DatasetUploadInSchema(Schema):
     name = String(required=True)
     description = String(load_default="")
