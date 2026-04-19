@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import BigInteger, String, Column
 
-from db import database
+from config import database
 
 class User(database.Model):
     __tablename__ = 'users'

@@ -1,6 +1,6 @@
 from sqlalchemy import BigInteger, Column, ForeignKey, DateTime, Index, UniqueConstraint
 from sqlalchemy import func
-from db import database
+from config import database
 
 # 数据集权限模型：记录哪些用户对哪些数据集具有访问权限，来源于哪个共享请求
 # 有记录说明用户具有访问权限，无记录说明没有访问权限（不区分未授权和拒绝，简化逻辑）

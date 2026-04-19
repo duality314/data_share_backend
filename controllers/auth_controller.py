@@ -1,7 +1,7 @@
 from flask import abort
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from db import database
+from config import database
 from models.user import User
 
 def register_user(username: str, password: str):

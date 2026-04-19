@@ -1,5 +1,12 @@
 # config.py
 import os
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
+
+# 数据库和JWT初始化
+database = SQLAlchemy()
+jwt = JWTManager()
+
 
 class Config:
     # JWT 秘钥，用于签署JWT令牌

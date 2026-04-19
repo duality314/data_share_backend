@@ -1,5 +1,5 @@
 from sqlalchemy import BigInteger, String, Text, Boolean, Integer, Column, ForeignKey
-from db import database
+from config import database
 
 class Dataset(database.Model):
     __tablename__ = 'datasets'

@@ -3,8 +3,7 @@ from apiflask import APIFlask
 from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
 
-from config import Config
-from db import database, jwt
+from config import Config, database, jwt
 
 
 def create_app():

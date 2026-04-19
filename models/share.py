@@ -1,5 +1,5 @@
 from sqlalchemy import BigInteger, String, Text, Boolean, Integer, Column, ForeignKey, DateTime, Index, func
-from db import database
+from config import database
 
 # 共享模型
 class Share(database.Model):

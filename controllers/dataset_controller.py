@@ -3,7 +3,7 @@ from flask import abort, send_file, redirect, url_for, current_app
 from werkzeug.utils import secure_filename
 from urllib.parse import urlparse
 
-from db import database
+from config import database
 from models.dataset import Dataset
 from models.download_log import DownloadLog
 from utils.preview import read_dataset_preview_lines

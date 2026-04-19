@@ -3,7 +3,7 @@ from sqlalchemy import BigInteger
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
 
-from db import database
+from config import database
 from models.share import Share
 from models.dataset import Dataset
 from models.dataset_permission import DatasetPermission

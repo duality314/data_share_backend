@@ -1,5 +1,5 @@
 from sqlalchemy import BigInteger, Column, ForeignKey
-from db import database
+from config import database
 
 class DownloadLog(database.Model):
     __tablename__ = 'download_logs'
