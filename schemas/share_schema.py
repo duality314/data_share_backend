@@ -5,7 +5,6 @@ from apiflask.fields import Boolean, Integer, List, Nested, String
 class ShareCreateInSchema(Schema):
     datasetId = Integer(required=True)
     message = String(load_default="")
-    publicKey = String(load_default=None, allow_none=True)
 
 
 class SharePatchInSchema(Schema):
@@ -26,7 +25,6 @@ class ShareItemSchema(Schema):
     datasetId = Integer(load_default=None, allow_none=True)
     objectKey = String(load_default="unknown")
     storageType = String(load_default="")
-    consumerPublicKey = String(load_default=None, allow_none=True)
 
 
 class ShareListOutSchema(Schema):
