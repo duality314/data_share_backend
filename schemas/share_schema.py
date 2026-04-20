@@ -25,6 +25,7 @@ class ShareItemSchema(Schema):
     status = String(required=True)
     datasetId = Integer(load_default=None, allow_none=True)
     objectKey = String(load_default="unknown")
+    storageType = String(load_default="")
     consumerPublicKey = String(load_default=None, allow_none=True)
 
 

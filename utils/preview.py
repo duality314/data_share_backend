@@ -1,4 +1,6 @@
+import os
 import urllib.request
+from flask import current_app
 
 
 def read_first_lines(file_path: str, max_lines: int = 10):
@@ -39,4 +41,22 @@ def can_preview_text(data_type: str):
 
 def read_dataset_preview_lines(dataset, max_lines: int = 10):
     """根据存储类型读取预览内容，异常统一返回空列表"""
+    if not can_preview_text(getattr(dataset, "data_type", "")):
+        return []
+
+    storage_type = (getattr(dataset, "storage_type", None) or "local").lower()
+    if storage_type == "local":
+        object_key = getattr(dataset, "object_key", "")
+        if not object_key:
+            return []
+        file_path = os.path.abspath(object_key)
+        real_upload_dir = os.path.abspath(current_app.config.get("UPLOAD_DIR", "uploads"))
+        if os.path.commonpath([real_upload_dir, file_path]) != real_upload_dir:
+            return []
+        return read_first_lines(file_path, max_lines=max_lines)
+
+    s3_url = getattr(dataset, "s3_url", None)
+    if storage_type == "s3" and s3_url:
+        return read_first_lines_from_url(s3_url, max_lines=max_lines)
+
     return []

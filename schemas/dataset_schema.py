@@ -9,6 +9,7 @@ class DatasetItemSchema(Schema):
     description = String(required=True)
     domain = String(required=True)
     dataType = String(attribute="data_type", required=True)
+    storageType = String(attribute="storage_type", required=True)
     fileSize = Integer(attribute="file_size", required=True)
     isListed = Boolean(attribute="is_listed", required=True)
     downloads = Integer(required=True, dump_only=True)
@@ -34,15 +35,16 @@ class DatasetUploadInSchema(Schema):
     domain = String(load_default="general")
     dataType = String(load_default="file")
     fileSize = Integer(load_default=0)
-    # 新接口：客户端应提供对象键 objectKey（S3 object key）
-    objectKey = String(required=True)
+    # S3 直传时提供 objectKey；本地上传时提供 file。
+    objectKey = String(load_default=None, allow_none=True)
+    file = File(load_default=None, allow_none=True)
 
     @validates_schema
     def validate_upload_source(self, data, **kwargs):
-        # 强制要求 objectKey（短期仅 S3 支持）
         object_key = data.get("objectKey")
-        if not object_key:
-            raise ValidationError("objectKey is required for S3 uploads.")
+        file = data.get("file")
+        if bool(object_key) == bool(file):
+            raise ValidationError("Provide exactly one upload source: objectKey or file.")
 
 
 class DatasetMarketQueryInSchema(Schema):
@@ -56,6 +58,7 @@ class DatasetDetailDatasetSchema(Schema):
     description = String(required=True)
     domain = String(required=True)
     dataType = String(required=True)
+    storageType = String(required=True)
     fileSize = Integer(required=True)
     downloads = Integer(required=True)
     isListed = Boolean(required=True)

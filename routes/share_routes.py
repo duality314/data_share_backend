@@ -38,15 +38,19 @@ def list_my_sharing_route():
     provider_id = int(get_jwt_identity())# 获取当前JWT中保存的用户ID
     # 调用控制器执行注册逻辑
     sharing_dataset = list_my_sharing(provider_id)
-    sharing_list = [ {
-        "id": sd.id,
-        "consumerName": User.query.get(sd.consumer_id).username if sd.consumer_id else "unknown",
-        "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
-        "request_description": sd.request_description,
-        "objectKey": Dataset.query.get(sd.dataset_id).object_key if sd.dataset_id else "unknown",
-        "consumerPublicKey": sd.consumer_public_key,
-        "status": sd.status,
-    } for sd in sharing_dataset ]
+    sharing_list = []
+    for sd in sharing_dataset:
+        dataset = Dataset.query.get(sd.dataset_id) if sd.dataset_id else None
+        sharing_list.append({
+            "id": sd.id,
+            "consumerName": User.query.get(sd.consumer_id).username if sd.consumer_id else "unknown",
+            "datasetName": dataset.name if dataset else "unknown",
+            "request_description": sd.request_description,
+            "objectKey": dataset.object_key if dataset else "unknown",
+            "storageType": dataset.storage_type if dataset else "",
+            "consumerPublicKey": sd.consumer_public_key,
+            "status": sd.status,
+        })
     return {"sharing": sharing_list}
 
 # 列出共享给我的数据集
@@ -57,12 +61,16 @@ def list_shared_with_me_route():
     consumer_id = int(get_jwt_identity())# 获取当前JWT中保存的用户ID
     # 调用控制器执行注册逻辑
     shared_dataset = list_shared_with_me(consumer_id)
-    shared_list = [ {
-        "id": sd.id,
-        "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
-        "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
-        "datasetId": sd.dataset_id
-    } for sd in shared_dataset ]
+    shared_list = []
+    for sd in shared_dataset:
+        dataset = Dataset.query.get(sd.dataset_id) if sd.dataset_id else None
+        shared_list.append({
+            "id": sd.id,
+            "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
+            "datasetName": dataset.name if dataset else "unknown",
+            "datasetId": sd.dataset_id,
+            "storageType": dataset.storage_type if dataset else "",
+        })
     return {"shared": shared_list}
 
 # 列出我请求共享的数据集
@@ -72,12 +80,16 @@ def list_shared_with_me_route():
 def list_my_requests_route():
     consumer_id = int(get_jwt_identity())
     requested = list_my_requests(consumer_id)
-    requests_list = [{
-        "id": sd.id,
-        "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
-        "datasetName": Dataset.query.get(sd.dataset_id).name if sd.dataset_id else "unknown",
-        "request_description": sd.request_description,
-        "status": sd.status,
-        "datasetId": sd.dataset_id
-    } for sd in requested]
+    requests_list = []
+    for sd in requested:
+        dataset = Dataset.query.get(sd.dataset_id) if sd.dataset_id else None
+        requests_list.append({
+            "id": sd.id,
+            "providerName": User.query.get(sd.provider_id).username if sd.provider_id else "unknown",
+            "datasetName": dataset.name if dataset else "unknown",
+            "request_description": sd.request_description,
+            "status": sd.status,
+            "datasetId": sd.dataset_id,
+            "storageType": dataset.storage_type if dataset else "",
+        })
     return {"requests": requests_list}

@@ -36,7 +36,8 @@ def upload_dataset(data):
         data.get("domain"),
         data.get("dataType"),
         data.get("objectKey"),
-        data.get("fileSize")
+        data.get("fileSize"),
+        data.get("file")
         
     )
     return {"dataset": dataset}
@@ -71,6 +72,7 @@ def dataset_detail(dataset_id):
             "description": dataset.description,
             "domain": dataset.domain,
             "dataType": dataset.data_type,
+            "storageType": dataset.storage_type,
             "fileSize": dataset.file_size,
             "downloads": dataset.downloads,
             "isListed": dataset.is_listed,
