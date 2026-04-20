@@ -1,71 +1,54 @@
 # data_share_backend
-这是中国人民大学litonglab实验室data_share系统的后端
 
-# 部署流程
+客户端本地中转站。前端 `data_share_frontend` 仍然访问本机后端，例如 `http://localhost:54320`，本服务再把 `/api/*` 请求转发到远程 `market_server`。
 
-1. 克隆仓库并进入目录：
+## 角色边界
 
-```bash
-git clone https://github.com/litonglab/data_share_backend.git
-cd data_share_backend
-``` 
+- `data_share_frontend`：客户端界面。
+- `data_share_backend`：客户端本地网关，不保存业务数据，不直接访问数据库。
+- `market_server`：远程数据市场服务端，保留原有认证、数据集、共享审批、下载等全部业务逻辑。
 
-2. 创建并激活 Python 虚拟环境：
+## 启动
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate  # Linux
-```
-```bash
-venv\Scripts\activate  # Windows
-```
-3. 安装依赖：
-
-```bash
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
-```
-4. 设置环境变量（示例）：
-
-```bash
-export DB_USER=root DB_PASS=1 DB_HOST=localhost DB_PORT=3306 DB_NAME=data_share_test
-export JWT_SECRET="dev-secret"
-export UPLOAD_DIR=uploads
-```
-
-5. 启动后端服务：
-
-```bash
+set MARKET_SERVER_URL=http://服务器IP:54321
 python app.py
 ```
-> 注意：`app.py` 在启动时会调用 `database.create_all()` 自动建表，仅建议在开发环境使用。生产请使用 Alembic 或其他迁移工具.
 
-# OpenAPI 文档
+默认配置：
 
-服务启动后可访问：
+- 本地网关地址：`http://127.0.0.1:54320`
+- 远程市场服务：`http://127.0.0.1:54321`
+- 前端跨域源：`http://localhost:5173`
 
-- Swagger UI: `http://127.0.0.1:54320/docs`
-- OpenAPI JSON: `http://127.0.0.1:54320/openapi.json`
+## 环境变量
 
-# RESTful API 路由（当前版本）
+- `MARKET_SERVER_URL`：远程 `market_server` 根地址，例如 `http://192.168.1.10:54321`
+- `MARKET_SERVER_API_PREFIX`：远程 API 前缀，默认 `/api`
+- `APP_HOST`：本地网关监听地址，默认 `127.0.0.1`
+- `APP_PORT`：本地网关监听端口，默认 `54320`
+- `CORS_ORIGIN`：允许访问本地网关的前端地址，默认 `http://localhost:5173`
 
-## Auth
+## API
+
+前端路径不变，仍访问：
 
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/datasets/upload`
+- `GET /api/datasets/mine`
+- `GET /api/datasets/market`
+- `GET /api/datasets/<dataset_id>`
+- `PATCH /api/datasets/<dataset_id>/listing`
+- `GET /api/datasets/<dataset_id>/download`
+- `GET /api/datasets/<dataset_id>/download-url`
+- `POST /api/shares/requests`
+- `PATCH /api/shares/<share_id>`
+- `GET /api/shares/sharing-with-others`
+- `GET /api/shares/shared-with-me`
+- `GET /api/shares/requests-by-me`
 
-## Datasets
-
-- `POST /api/datasets`（上传数据集，multipart/form-data）
-- `GET /api/datasets/mine`（我的数据集）
-- `GET /api/datasets/market`（数据市场，支持 query: `domain`、`sort`）
-- `GET /api/datasets/<dataset_id>`（数据集详情）
-- `PATCH /api/datasets/<dataset_id>/listing`（更新上架状态）
-- `GET /api/datasets/<dataset_id>/download`（下载）
-
-## Shares
-
-- `POST /api/shares`（创建共享请求）
-- `PATCH /api/shares/<share_id>`（provider 审批共享请求）
-- `GET /api/shares/sharing-with-others`（我发出的共享）
-- `GET /api/shares/shared-with-me`（共享给我的数据）
-
+这些请求会由本地网关原样转发给远程 `market_server`。
