@@ -22,7 +22,12 @@ def create_app():
         "BearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}
     }
 
-    CORS(app, origins=[Config.CORS_ORIGIN], supports_credentials=True)  # 配置跨域
+    CORS(
+        app,
+        origins=[Config.CORS_ORIGIN],
+        supports_credentials=True,
+        expose_headers=["Content-Disposition", "Content-Type"],
+    )  # 配置跨域
 
     # 注册本地中转站蓝图：前端仍访问 /api/*，请求会转发到远程 market_server。
     from routes import proxy_bp
